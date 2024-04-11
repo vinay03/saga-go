@@ -8,7 +8,7 @@
 		-> VerifyStageConfig
 	- Stage (Sub-Transaction)
 		-> Exec
-	- SagaOperation
+	- SagaTransaction
 	- SagaTemplate
 		-> 
 	- Operator
