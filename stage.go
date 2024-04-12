@@ -1,6 +1,10 @@
 package saga
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+	"reflect"
+)
 
 type Stage struct {
 	ID               string
@@ -14,5 +18,11 @@ var (
 )
 
 func (st *Stage) Verify() error {
+
+	actionValueType := reflect.TypeOf(st.Action)
+	if actionValueKind := actionValueType.Kind(); actionValueKind != reflect.Func {
+		return fmt.Errorf("Action field should be a function. Provided %s instead", actionValueKind)
+	}
+
 	return nil
 }

@@ -4,18 +4,10 @@
 ## Structure
 - Entities
 	- `Saga`
-		-> AddStage
-		-> VerifyStageConfig
 	- Stage (Sub-Transaction)
-		-> Exec
-	- SagaTransaction
-	- SagaTemplate
-		-> 
+	- Transaction
+	- Template
 	- Operator
-		-> Start
-		-> StartAsync
-		-> Load
-		-> Abort
 - Storage
 	- In-Memory
 	- DB
@@ -26,3 +18,13 @@
 		- Redis
 		- RabbitMQ
 - 
+
+## Saga
+## Saga Stage
+## Saga Template
+## Saga Transaction
+## Saga Operator
+	-> Start
+	-> StartAsync
+	-> Load
+	-> Abort
