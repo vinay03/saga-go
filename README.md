@@ -3,11 +3,11 @@
 
 ## Structure
 - Entities
-	- `Saga`
 	- Stage (Sub-Transaction)
+	- `Saga`
 	- Transaction
-	- Template
-	- Operator
+	<!-- - Template -->
+	- Coordinator
 - Storage
 	- In-Memory
 	- DB
@@ -21,9 +21,9 @@
 
 ## Saga
 ## Saga Stage
-## Saga Template
-## Saga Transaction
-## Saga Operator
+<!-- ## Saga Template -->
+## Saga Transaction + Coordinator
+<!-- ## Saga Coordinator -->
 	-> Start
 	-> StartAsync
 	-> Load

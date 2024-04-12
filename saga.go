@@ -31,10 +31,3 @@ func (sg *Saga) AddStage(st *Stage) error {
 	sg.Stages = append(sg.Stages, st)
 	return nil
 }
-func (sg *Saga) Start() {
-
-	for _, stg := range sg.Stages {
-		stg.Action()
-	}
-
-}
