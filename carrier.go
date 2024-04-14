@@ -1,15 +1,36 @@
 package saga
 
-type MessageCarrier interface {
+import (
+	"errors"
+	"fmt"
+)
+
+type Carrier interface {
+	IsActive() bool
+	SetOptions(CarrierConfig) error
 }
 
-type MessageCarrierOptions struct {
+type CarrierConfig interface {
+	Verify() error
 }
 
-func NewInMemoryCarrier() *InMemoryMessageCarrier {
-	return &InMemoryMessageCarrier{}
+type CarrierLineup struct {
+	InMem *InMemoryCarrier
+	Redis *RedisCarrier
 }
 
-type InMemoryMessageCarrier struct {
-	Data map[string][]string
+func (cl *CarrierLineup) SetupCarriers(options ...CarrierConfig) error {
+	for _, opts := range options {
+		switch v := opts.(type) {
+		case *InMemoryCarrierConfig:
+			cl.InMem.SetOptions(v)
+			fmt.Println(v)
+		case *RedisCarrierOption:
+			cl.Redis.SetOptions(v)
+			fmt.Println(v)
+		default:
+			return errors.New("invalid carrier option")
+		}
+	}
+	return nil
 }

@@ -2,14 +2,84 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"log"
 
 	saga "github.com/vinay03/saga-go"
 )
 
 func main() {
-	orderCreatedSaga := saga.NewSaga("Order_Created")
+	OrderCreatedSaga, err := saga.NewSaga("OrderCreated").Transactions(
+		"CheckProducts",
+		"CheckDiscounts",
+		"NotifyNewOrderToSeller",
+		"NotifyOrderUpdateToBuyer",
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	OrderCreatedSaga.DefineActions(
+		"CheckProducts",
+		func(ctx context.Context, data interface{}) (interface{}, error) {
+			fmt.Println("Entered `CheckProducts` phase")
+			return data, nil
+		},
+		func(ctx context.Context, data interface{}) (interface{}, error) {
+			fmt.Println("Entered compensating `CheckProducts` phase")
+			return data, nil
+		},
+	)
+
+	OrderCreatedSaga.DefineActions(
+		"CheckDiscount",
+		func(ctx context.Context, data interface{}) (interface{}, error) {
+			fmt.Println("Entered `CheckDiscount` phase")
+			return data, nil
+		},
+		func(ctx context.Context, data interface{}) (interface{}, error) {
+			fmt.Println("Entered compensating `CheckDiscount` phase")
+			return data, nil
+		},
+	)
+	OrderCreatedSaga.DefineActions(
+		"NotifySeller",
+		func(ctx context.Context, data interface{}) (interface{}, error) {
+			fmt.Println("Entered `NotifySeller` phase")
+			return data, nil
+		},
+		func(ctx context.Context, data interface{}) (interface{}, error) {
+			fmt.Println("Entered compensating `NotifySeller` phase")
+			return data, nil
+		},
+	)
+	OrderCreatedSaga.DefineActions(
+		"NotifySeller",
+		func(ctx context.Context, data interface{}) (interface{}, error) {
+			fmt.Println("Entered `NotifySeller` phase")
+			return data, nil
+		},
+		func(ctx context.Context, data interface{}) (interface{}, error) {
+			fmt.Println("Entered compensating `NotifySeller` phase")
+			return data, nil
+		},
+	)
+
+	coord := saga.GetCoordinatorInstance()
+	coord.Carrier.SetupCarriers(
+		&saga.InMemoryCarrierConfig{},
+		// saga.RedisCarrierOption{},
+	)
+
+	// coord.SetupCarrierOptions
+
+	// mem := saga.NewInMemoryCarrier()
+	// trans := saga.NewCoordinator(mem)
+
+	// output := trans.Start()
+	// fmt.Println(output)
+
+	/* orderCreatedSaga := saga.NewSaga("Order_Created")
 	orderCreatedSaga.AddStages(
 		&saga.Stage{
 			ID: "Step-1",
@@ -46,8 +116,8 @@ func main() {
 		},
 	)
 	mem := saga.NewInMemoryCarrier()
-	trans := saga.NewTransaction(orderCreatedSaga, mem)
+	trans := saga.NewOperator(orderCreatedSaga, mem)
 
 	output := trans.Start()
-	fmt.Println(output)
+	fmt.Println(output) */
 }

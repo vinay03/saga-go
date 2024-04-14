@@ -7,7 +7,7 @@ import (
 	"reflect"
 )
 
-type ActionFunction func(context.Context, interface{}) (error, interface{})
+type ActionFunction func(context.Context, interface{}) (interface{}, error)
 
 type Stage struct {
 	ID               string
@@ -16,20 +16,28 @@ type Stage struct {
 }
 
 var (
-	EmptyStageIDError               = errors.New("Blank Stage ID")
-	ActionFuncInvalidParameterError = errors.New("Action function has invalid parameters")
+	ErrEmptyStageID               = errors.New("blank stage id")
+	ErrActionFuncInvalidParameter = errors.New("action function has invalid parameters")
 )
 
+func VerifyStageID(stageID string) error {
+	if stageID == "" {
+		return ErrEmptyStageID
+	}
+	return nil
+}
+
 func (st *Stage) Verify() error {
+	// TODO: validate all the configurations of a stage in SAGA.
 
 	actionValueType := reflect.TypeOf(st.Action)
 	if actionValueKind := actionValueType.Kind(); actionValueKind != reflect.Func {
-		return fmt.Errorf("Action field should be a function. Provided %s instead", actionValueKind)
+		return fmt.Errorf("action field should be a function. provided %s instead", actionValueKind)
 	}
 	if actionValueType.NumOut() != 2 {
-		return errors.New("Action function must return 2 values in format (error, interface{}).")
+		return errors.New("action function must return 2 values in format (error, interface{})")
 	} else if actionValueType.Out(0) != reflect.TypeOf((*error)(nil)).Elem() {
-		return errors.New("Action function must return error as its first return value.")
+		return errors.New("action function must return error as its first return value")
 	}
 
 	CompensateActionValueType := reflect.TypeOf(st.CompensateAction)

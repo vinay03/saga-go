@@ -1,4 +1,5 @@
-## Saga Pattern in Go
+## Saga
+A framework to implement Choreography based SAGA pattern in Golang. You can use this framework to implement SAGA pattern in local as well as distributed systems.
 
 
 ## Structure
@@ -17,7 +18,7 @@
 	- AMQP Protocol
 		- Redis
 		- RabbitMQ
-- 
+
 
 ## Saga
 ## Saga Stage
@@ -28,3 +29,10 @@
 	-> StartAsync
 	-> Load
 	-> Abort
+
+
+Actions
+> Start a SAGA transaction
+	- Provide saga id, context and data
+	- Trigger an event `OrderCreated::start`
+	- this should trigger 

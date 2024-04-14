@@ -2,29 +2,45 @@ package saga
 
 import (
 	"context"
+	"sync"
 )
 
-func NewTransaction(sg *Saga, cr MessageCarrier) *Transaction {
-	return &Transaction{
-		Template: sg,
-		Carrier:  cr,
+var Coord *Coordinator
+var CoordLock sync.Mutex
+
+func GetCoordinatorInstance() *Coordinator {
+	if Coord != nil {
+		return Coord
 	}
+	CoordLock.Lock()
+	defer CoordLock.Unlock()
+	// Just in case if instance is created within the Mutex locking operation.
+	if Coord != nil {
+		return Coord
+	}
+	Coord = &Coordinator{
+		Carrier: &CarrierLineup{
+			InMem: getInMemoryCarrierInstance(),
+			Redis: getRedisCarrierInstance(),
+		},
+	}
+	return Coord
 }
 
-type Transaction struct {
+type Coordinator struct {
 	Template  *Saga
 	IsAborted bool
-	Carrier   MessageCarrier
+	Carrier   *CarrierLineup
 
 	In  interface{}
 	Out interface{}
 }
 
-func (tr *Transaction) Start() interface{} {
+func (tr *Coordinator) Start() interface{} {
 	input := tr.In
 	var err error
 	for _, st := range tr.Template.Stages {
-		err, input = st.Action(context.Background(), input)
+		input, err = st.Action(context.Background(), input)
 		if err != nil {
 			return tr.Abort()
 		}
@@ -32,7 +48,7 @@ func (tr *Transaction) Start() interface{} {
 	tr.Out = input
 	return tr.Out
 }
-func (tr *Transaction) Abort() interface{} {
+func (tr *Coordinator) Abort() interface{} {
 	tr.IsAborted = true
 
 	return nil
