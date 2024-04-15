@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
@@ -32,35 +33,35 @@ func main() {
 	)
 
 	OrderCreatedSaga.DefineActions(
-		"CheckDiscount",
+		"CheckDiscounts",
 		func(ctx context.Context, data interface{}) (interface{}, error) {
-			fmt.Println("Entered `CheckDiscount` phase")
+			fmt.Println("Entered `CheckDiscounts` phase")
 			return data, nil
 		},
 		func(ctx context.Context, data interface{}) (interface{}, error) {
-			fmt.Println("Entered compensating `CheckDiscount` phase")
-			return data, nil
-		},
-	)
-	OrderCreatedSaga.DefineActions(
-		"NotifySeller",
-		func(ctx context.Context, data interface{}) (interface{}, error) {
-			fmt.Println("Entered `NotifySeller` phase")
-			return data, nil
-		},
-		func(ctx context.Context, data interface{}) (interface{}, error) {
-			fmt.Println("Entered compensating `NotifySeller` phase")
+			fmt.Println("Entered compensating `CheckDiscounts` phase")
 			return data, nil
 		},
 	)
 	OrderCreatedSaga.DefineActions(
-		"NotifySeller",
+		"NotifyNewOrderToSeller",
 		func(ctx context.Context, data interface{}) (interface{}, error) {
-			fmt.Println("Entered `NotifySeller` phase")
+			fmt.Println("Entered `NotifyNewOrderToSeller` phase")
 			return data, nil
 		},
 		func(ctx context.Context, data interface{}) (interface{}, error) {
-			fmt.Println("Entered compensating `NotifySeller` phase")
+			fmt.Println("Entered compensating `NotifyNewOrderToSeller` phase")
+			return data, nil
+		},
+	)
+	OrderCreatedSaga.DefineActions(
+		"NotifyOrderUpdateToBuyer",
+		func(ctx context.Context, data interface{}) (interface{}, error) {
+			fmt.Println("Entered `NotifyOrderUpdateToBuyer` phase")
+			return data, errors.New("Aborted")
+		},
+		func(ctx context.Context, data interface{}) (interface{}, error) {
+			fmt.Println("Entered compensating `NotifyOrderUpdateToBuyer` phase")
 			return data, nil
 		},
 	)
@@ -71,14 +72,24 @@ func main() {
 		// saga.RedisCarrierOption{},
 	)
 	coord.RegisterSaga(OrderCreatedSaga, coord.Carrier.InMem)
+	coord.RegisterSaga(TransferSaga, coord.Carrier.InMem)
 
-	data := struct {
-		Testdata string `json:"testdata"`
-	}{
-		"Test Sample string",
+	// data := struct {
+	// 	Testdata string `json:"testdata"`
+	// }{
+	// 	"Test Sample string",
+	// }
+
+	// coord.Start("OrderCreated", data)
+
+	transferPayload := TransferRequest{
+		SenderUserID:        1,
+		SenderUserBalance:   1000,
+		ReceiverUserId:      2,
+		ReceiverUserBalance: 1000,
+		TransferAmount:      50,
 	}
-
-	coord.Start("OrderCreated", data)
+	coord.Start("Transfer", transferPayload)
 
 	// coord.SetupCarrierOptions
 

@@ -1,18 +1,16 @@
 package saga
 
-import "log"
-
 type InMemoryCarrier struct {
 	Active        bool
 	Options       CarrierConfig
-	Data          map[string][]string
+	Log           []string
 	EventListener func(Message string, Data interface{})
 }
 
 func getInMemoryCarrierInstance() *InMemoryCarrier {
 	return &InMemoryCarrier{
 		Active: false,
-		Data:   make(map[string][]string),
+		Log:    []string{},
 	}
 }
 
@@ -31,7 +29,8 @@ func (mem *InMemoryCarrier) SetOptions(opts CarrierConfig) error {
 }
 
 func (mem *InMemoryCarrier) Push(Message string, Data interface{}) error {
-	log.Println("Pushing Message: ", Message, " Data: ", Data)
+	// log.Println("Pushing Message: ", Message, " Data: ", Data)
+	mem.Log = append(mem.Log, Message)
 	mem.EventListener(Message, Data)
 	return nil
 }

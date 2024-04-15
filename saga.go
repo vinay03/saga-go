@@ -2,6 +2,7 @@ package saga
 
 import (
 	"errors"
+	"fmt"
 	"log"
 )
 
@@ -31,6 +32,7 @@ type StageList []*Stage
 
 type Saga struct {
 	ID            string
+	StagesCount   int
 	Stages        StageList
 	StagesNameRef map[string]*Stage
 }
@@ -44,7 +46,10 @@ func (sg *Saga) Transactions(stageIds ...string) (*Saga, error) {
 		stage := &Stage{
 			ID: stageId,
 		}
-		sg.AddStage(stage)
+		err = sg.AddStage(stage)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 	return sg, nil
 }
@@ -75,18 +80,35 @@ func (sg *Saga) AddStage(st *Stage) error {
 	if err != nil {
 		return err
 	}
+	st.SequenceNumber = len(sg.Stages) + 1
 	sg.Stages = append(sg.Stages, st)
 	sg.StagesNameRef[st.ID] = st
+	sg.StagesCount = len(sg.Stages)
 	return nil
 }
 
 func (sg *Saga) DefineActions(stageId string, action ActionFunction, compensateAction ActionFunction) error {
-	for _, st := range sg.Stages {
-		if st.ID == stageId {
-			st.Action = action
-			st.CompensateAction = compensateAction
-			return nil
-		}
+	stage, found := sg.StagesNameRef[stageId]
+	if !found {
+		return fmt.Errorf(ErrStageNotFound, sg.ID, stageId)
 	}
-	return errors.New("transaction not found")
+	stage.Action = action
+	stage.CompensateAction = compensateAction
+	return nil
+}
+
+func (sg *Saga) GetFirstStage() *Stage {
+	return sg.Stages[0]
+}
+func (sg *Saga) GetNextStage(stage *Stage) *Stage {
+	if sg.StagesCount > stage.SequenceNumber {
+		return sg.Stages[stage.SequenceNumber]
+	}
+	return nil
+}
+func (sg *Saga) GetPrevStage(stage *Stage) *Stage {
+	if stage.SequenceNumber > 1 {
+		return sg.Stages[stage.SequenceNumber-2]
+	}
+	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 )
 
@@ -14,7 +15,8 @@ var CoordLock sync.Mutex
 const (
 	EventKeyFormat = "%s|%s|%s"
 
-	ErrSagaNotFound = "[%s] Saga Id not found"
+	ErrSagaNotFound  = "[%s] Saga Id not found"
+	ErrStageNotFound = "[%s] Stage Id '%s' not found"
 )
 
 func GetCoordinatorInstance() *Coordinator {
@@ -67,10 +69,9 @@ func (coord *Coordinator) SetupCarriers(options ...CarrierConfig) error {
 }
 
 func (coord *Coordinator) MessageHandler(message string, data interface{}) {
-	log.Println("Received Message: ", message, " Data: ", data)
-	var sagaId, stageId, eventAction string
-	fmt.Sscanf(message, EventKeyFormat, sagaId, stageId, eventAction)
+	// log.Println("Received Message: ", message, " Data: ", data)
 
+	sagaId, stageId, eventAction := decodeEventKey(message)
 	value, ok := coord.Sagas[sagaId]
 	if !ok {
 		log.Fatal(fmt.Errorf(ErrSagaNotFound, sagaId))
@@ -78,10 +79,13 @@ func (coord *Coordinator) MessageHandler(message string, data interface{}) {
 
 	// blank stage Id means it is the first event of the SAGA
 	if stageId == "" {
-		stageId = value.Saga.Stages[0].ID
+		stageId = value.Saga.GetFirstStage().ID
 	}
 
-	stage := value.Saga.StagesNameRef[stageId]
+	stage, found := value.Saga.StagesNameRef[stageId]
+	if !found {
+		log.Fatalf(ErrStageNotFound, sagaId, stageId)
+	}
 
 	switch eventAction {
 	case "start":
@@ -91,6 +95,13 @@ func (coord *Coordinator) MessageHandler(message string, data interface{}) {
 			value.Carrier.Push(eventKey, data)
 		}
 		// Call start action of the next stage or complete the SAGA.
+		nextStage := value.Saga.GetNextStage(stage)
+		if nextStage != nil {
+			eventKey := generateEventKey(sagaId, nextStage.ID, "start")
+			value.Carrier.Push(eventKey, data)
+		} else {
+			// End of SAGA
+		}
 	case "abort":
 		data, err := stage.CompensateAction(context.Background(), data)
 		if err != nil {
@@ -98,6 +109,13 @@ func (coord *Coordinator) MessageHandler(message string, data interface{}) {
 			value.Carrier.Push(eventKey, data)
 		}
 		// call abort action of previous stage or abort the SAGA completely
+		prevStage := value.Saga.GetPrevStage(stage)
+		if prevStage != nil {
+			eventKey := generateEventKey(sagaId, prevStage.ID, "abort")
+			value.Carrier.Push(eventKey, data)
+		} else {
+			// End of SAGA Abortion sequence
+		}
 	default:
 		log.Fatalf("[%s] Invalid event action: %s", message, eventAction)
 	}
@@ -113,6 +131,11 @@ func (coord *Coordinator) RegisterSaga(saga *Saga, carr Carrier) {
 
 func generateEventKey(sagaId, stageId, eventAction string) string {
 	return fmt.Sprintf(EventKeyFormat, sagaId, stageId, eventAction)
+}
+
+func decodeEventKey(eventKey string) (string, string, string) {
+	parts := strings.Split(eventKey, "|")
+	return parts[0], parts[1], parts[2]
 }
 
 func (coord *Coordinator) Start(sagaId string, data interface{}) (interface{}, error) {
