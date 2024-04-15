@@ -1,17 +1,12 @@
 package saga
 
 type RedisCarrier struct {
-	IsInit  bool
 	Active  bool
 	Options CarrierConfig
 }
 
-type RedisCarrierOption struct {
-}
-
 func getRedisCarrierInstance() *RedisCarrier {
 	return &RedisCarrier{
-		IsInit:  false,
 		Active:  false,
 		Options: &RedisCarrierOption{},
 	}
@@ -28,6 +23,18 @@ func (rc *RedisCarrier) SetOptions(opts CarrierConfig) error {
 	}
 	rc.Options = opts
 	return nil
+}
+
+func (mem *RedisCarrier) Push(Message string, Data interface{}) error {
+	return nil
+}
+func (mem *RedisCarrier) AddListener(func(Message string, Data interface{})) error {
+	return nil
+}
+
+// ************************************************************
+/* Redis Carrier Configuration */
+type RedisCarrierOption struct {
 }
 
 func (redisOpt *RedisCarrierOption) Verify() error {

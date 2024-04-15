@@ -66,10 +66,19 @@ func main() {
 	)
 
 	coord := saga.GetCoordinatorInstance()
-	coord.Carrier.SetupCarriers(
+	coord.SetupCarriers(
 		&saga.InMemoryCarrierConfig{},
 		// saga.RedisCarrierOption{},
 	)
+	coord.RegisterSaga(OrderCreatedSaga, coord.Carrier.InMem)
+
+	data := struct {
+		Testdata string `json:"testdata"`
+	}{
+		"Test Sample string",
+	}
+
+	coord.Start("OrderCreated", data)
 
 	// coord.SetupCarrierOptions
 
