@@ -36,3 +36,10 @@ Actions
 	- Provide saga id, context and data
 	- Trigger an event `OrderCreated::start`
 	- this should trigger 
+
+
+Tasks
+- Make stages execution asynchronous
+- Add support for logger
+	- Add support for logger agents and/or centralized logging
+- 
