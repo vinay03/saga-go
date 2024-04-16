@@ -10,7 +10,12 @@ var (
 	ErrEmptySagaID = errors.New("empty stage identifier")
 )
 
-// Initializes a new SAGA with the given identifier
+// NewSaga initializes a new Saga with the given identifier.
+//
+// @Param id the identifier of the Saga (string). Same will be put in event key to identify the Saga. Alphabets and numbers are allowed only.
+//
+// Returns:
+// - a pointer to the newly created Saga.
 func NewSaga(id string) *Saga {
 	saga := _NewSaga()
 	err := VerifySagaId(id)

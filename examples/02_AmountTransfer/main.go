@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
-	"github.com/vinay03/saga-go"
+	saga "github.com/vinay03/saga-go"
 )
 
 var TransferSaga *saga.Saga
@@ -16,8 +17,8 @@ type TransferRequest struct {
 	ReceiverUserId      int     `json:"receiver_user_id"`
 	ReceiverUserBalance float32 `json:"receiver_user_balance"`
 	TransferAmount      float32 `json:"transfer_amount"`
-	SenderNotified      bool
-	ReceiverNotified    bool
+	SenderNotified      bool    `json:"sender_notified"`
+	ReceiverNotified    bool    `json:"receiver_notified"`
 }
 
 var Users = make(map[int]User)
@@ -69,6 +70,7 @@ func (s *NotificationService) CompensateNotifySenderWithUpdatedBalance(ctx conte
 func (s *NotificationService) NotifyReceiverWithUpdatedBalance(ctx context.Context, payload interface{}) (interface{}, error) {
 	transferPayload := payload.(TransferRequest)
 	transferPayload.ReceiverNotified = true
+	fmt.Printf("%+v  \n", transferPayload)
 	return transferPayload, nil
 }
 func (s *NotificationService) CompensateNotifyReceiverWithUpdatedBalance(ctx context.Context, payload interface{}) (interface{}, error) {
@@ -77,7 +79,7 @@ func (s *NotificationService) CompensateNotifyReceiverWithUpdatedBalance(ctx con
 	return payload, nil
 }
 
-func init() {
+func main() {
 	accountServ := AccountService{}
 	notificationServ := NotificationService{}
 
@@ -116,4 +118,20 @@ func init() {
 		notificationServ.CompensateNotifyReceiverWithUpdatedBalance,
 	)
 
+	coord := saga.GetCoordinatorInstance()
+	coord.SetupCarriers(
+		&saga.InMemoryCarrierConfig{},
+	)
+	coord.RegisterSaga(TransferSaga, coord.Carrier.InMem)
+
+	transferPayload := TransferRequest{
+		SenderUserID:        1,
+		SenderUserBalance:   1000,
+		ReceiverUserId:      2,
+		ReceiverUserBalance: 1000,
+		TransferAmount:      50,
+	}
+	coord.Start("Transfer", transferPayload)
+
+	time.Sleep(1 * time.Second)
 }

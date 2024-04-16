@@ -39,7 +39,7 @@ Actions
 
 
 Tasks
-- Make stages execution asynchronous
+- Make SAGA execution asynchronous
 - Add support for logger
 	- Add support for logger agents and/or centralized logging
 - 

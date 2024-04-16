@@ -31,7 +31,7 @@ func (mem *InMemoryCarrier) SetOptions(opts CarrierConfig) error {
 func (mem *InMemoryCarrier) Push(Message string, Data interface{}) error {
 	// log.Println("Pushing Message: ", Message, " Data: ", Data)
 	mem.Log = append(mem.Log, Message)
-	mem.EventListener(Message, Data)
+	go mem.EventListener(Message, Data)
 	return nil
 }
 func (mem *InMemoryCarrier) AddListener(handlerFunc func(Message string, Data interface{})) error {

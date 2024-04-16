@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"time"
 
 	saga "github.com/vinay03/saga-go"
 )
@@ -69,75 +70,16 @@ func main() {
 	coord := saga.GetCoordinatorInstance()
 	coord.SetupCarriers(
 		&saga.InMemoryCarrierConfig{},
-		// saga.RedisCarrierOption{},
 	)
 	coord.RegisterSaga(OrderCreatedSaga, coord.Carrier.InMem)
-	coord.RegisterSaga(TransferSaga, coord.Carrier.InMem)
 
-	// data := struct {
-	// 	Testdata string `json:"testdata"`
-	// }{
-	// 	"Test Sample string",
-	// }
-
-	// coord.Start("OrderCreated", data)
-
-	transferPayload := TransferRequest{
-		SenderUserID:        1,
-		SenderUserBalance:   1000,
-		ReceiverUserId:      2,
-		ReceiverUserBalance: 1000,
-		TransferAmount:      50,
+	data := struct {
+		Testdata string `json:"testdata"`
+	}{
+		"Test Sample string",
 	}
-	coord.Start("Transfer", transferPayload)
 
-	// coord.SetupCarrierOptions
+	coord.Start("OrderCreated", data)
 
-	// mem := saga.NewInMemoryCarrier()
-	// trans := saga.NewCoordinator(mem)
-
-	// output := trans.Start()
-	// fmt.Println(output)
-
-	/* orderCreatedSaga := saga.NewSaga("Order_Created")
-	orderCreatedSaga.AddStages(
-		&saga.Stage{
-			ID: "Step-1",
-			Action: func(ctx context.Context, data interface{}) (error, interface{}) {
-				fmt.Println("1->")
-				return nil, nil
-			},
-			CompensateAction: func(ctx context.Context, data interface{}) (error, interface{}) {
-				fmt.Println("1<-")
-				return nil, nil
-			},
-		},
-		&saga.Stage{
-			ID: "Step-2",
-			Action: func(ctx context.Context, data interface{}) (error, interface{}) {
-				fmt.Println("2->")
-				return errors.New("some"), nil
-			},
-			CompensateAction: func(ctx context.Context, data interface{}) (error, interface{}) {
-				fmt.Println("2<-")
-				return nil, nil
-			},
-		},
-		&saga.Stage{
-			ID: "Step-3",
-			Action: func(ctx context.Context, data interface{}) (error, interface{}) {
-				fmt.Println("3->")
-				return nil, nil
-			},
-			CompensateAction: func(ctx context.Context, data interface{}) (error, interface{}) {
-				fmt.Println("3<-")
-				return nil, nil
-			},
-		},
-	)
-	mem := saga.NewInMemoryCarrier()
-	trans := saga.NewOperator(orderCreatedSaga, mem)
-
-	output := trans.Start()
-	fmt.Println(output) */
+	time.Sleep(1 * time.Second)
 }
