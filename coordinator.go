@@ -52,15 +52,28 @@ type Coordinator struct {
 	Sagas map[string]CoordinatorSaga
 }
 
+// SetupCarriers sets up the carriers for the SAGA Execution Coordinator (SEC)
+//
+// It takes in a variadic parameter of CarrierConfig types, which can be any of the carrier configuration classes the implements the CarrierConfig interface.
+// CarrierOptions are set to the corresponding carrier and the EventHandler is added as a listener to the carrier events.
+//
+// Returns:
+// - error: an error if the carrier option is invalid, otherwise nil.
 func (coord *Coordinator) SetupCarriers(options ...CarrierConfig) error {
 	for _, opts := range options {
 		switch v := opts.(type) {
 		case *InMemoryCarrierConfig:
-			coord.Carrier.InMem.SetOptions(v)
-			coord.Carrier.InMem.AddListener(coord.MessageHandler)
+			err := coord.Carrier.InMem.SetOptions(v)
+			if err != nil {
+				return err
+			}
+			coord.Carrier.InMem.AddListener(coord.EventHandler)
 		case *RedisCarrierOption:
-			coord.Carrier.Redis.SetOptions(v)
-			coord.Carrier.InMem.AddListener(coord.MessageHandler)
+			err := coord.Carrier.Redis.SetOptions(v)
+			if err != nil {
+				return err
+			}
+			coord.Carrier.InMem.AddListener(coord.EventHandler)
 		default:
 			return errors.New("invalid carrier option")
 		}
@@ -68,10 +81,17 @@ func (coord *Coordinator) SetupCarriers(options ...CarrierConfig) error {
 	return nil
 }
 
-func (coord *Coordinator) MessageHandler(message string, data interface{}) {
-	// log.Println("Received Message: ", message, " Data: ", data)
+// EventHandler handles incoming event messages and performs actions based on the event key.
+//
+// Parameters:
+// - eventkey: the event message received (string)
+// - data: the data associated with the event (interface{})
+//
+// Returns: None
+func (coord *Coordinator) EventHandler(eventkey string, data interface{}) {
+	// log.Println("Received eventkey: ", eventkey, " Data: ", data)
 
-	sagaId, stageId, eventAction := decodeEventKey(message)
+	sagaId, stageId, eventAction := decodeEventKey(eventkey)
 	value, ok := coord.Sagas[sagaId]
 	if !ok {
 		log.Fatal(fmt.Errorf(ErrSagaNotFound, sagaId))
@@ -117,7 +137,7 @@ func (coord *Coordinator) MessageHandler(message string, data interface{}) {
 			// End of SAGA Abortion sequence
 		}
 	default:
-		log.Fatalf("[%s] Invalid event action: %s", message, eventAction)
+		log.Fatalf("[%s] Invalid event action: %s", eventkey, eventAction)
 	}
 
 }
@@ -148,13 +168,6 @@ func (coord *Coordinator) Start(sagaId string, data interface{}) (interface{}, e
 	eventKey := generateEventKey(sagaId, "", "start")
 	val.Carrier.Push(eventKey, data)
 
-	// var err error
-	// for _, st := range val.Saga.Stages {
-	// 	data, err = st.Action(context.Background(), data)
-	// 	if err != nil {
-	// 		return coord.Abort(data), fmt.Errorf("[%s] Saga aborted", sagaId)
-	// 	}
-	// }
 	return data, nil
 }
 func (tr *Coordinator) Abort(data interface{}) interface{} {

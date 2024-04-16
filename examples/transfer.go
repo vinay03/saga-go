@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/vinay03/saga-go"
@@ -37,6 +38,7 @@ func (s *AccountService) DeduceBalance(ctx context.Context, payload interface{})
 func (s *AccountService) CompensateDeduceBalance(ctx context.Context, payload interface{}) (interface{}, error) {
 	transferPayload := payload.(TransferRequest)
 	transferPayload.SenderUserBalance += transferPayload.TransferAmount
+	fmt.Printf("%+v", transferPayload)
 	return transferPayload, nil
 }
 
@@ -60,6 +62,8 @@ func (s *NotificationService) NotifySenderWithUpdatedBalance(ctx context.Context
 	return transferPayload, nil
 }
 func (s *NotificationService) CompensateNotifySenderWithUpdatedBalance(ctx context.Context, payload interface{}) (interface{}, error) {
+	transferPayload := payload.(TransferRequest)
+	transferPayload.SenderNotified = false
 	return payload, nil
 }
 func (s *NotificationService) NotifyReceiverWithUpdatedBalance(ctx context.Context, payload interface{}) (interface{}, error) {
@@ -68,6 +72,8 @@ func (s *NotificationService) NotifyReceiverWithUpdatedBalance(ctx context.Conte
 	return transferPayload, nil
 }
 func (s *NotificationService) CompensateNotifyReceiverWithUpdatedBalance(ctx context.Context, payload interface{}) (interface{}, error) {
+	transferPayload := payload.(TransferRequest)
+	transferPayload.ReceiverNotified = false
 	return payload, nil
 }
 
