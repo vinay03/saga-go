@@ -13,7 +13,8 @@ const (
 
 func NewOperation() *Operation {
 	return &Operation{
-		ID: generateOperationId(),
+		ID:              generateOperationId(),
+		currentEventKey: "",
 	}
 }
 

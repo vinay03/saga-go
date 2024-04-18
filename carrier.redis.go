@@ -28,7 +28,7 @@ func (rc *RedisCarrier) SetOptions(opts CarrierConfig) error {
 func (mem *RedisCarrier) Push(Message string, Data interface{}) error {
 	return nil
 }
-func (mem *RedisCarrier) AddListener(func(Message string, Data interface{})) error {
+func (mem *RedisCarrier) AddEventsListener(func(Message string, Data interface{})) error {
 	return nil
 }
 

@@ -4,13 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/vinay03/saga-go"
 )
 
 func main() {
+	loggerEntry := log.WithFields(log.Fields{
+		"service": "BasicService",
+	})
+
 	sampleSaga, err := saga.NewSaga("SampleSaga").Transactions(
 		"Step1",
 		"Step2",
@@ -46,7 +50,8 @@ func main() {
 		"Step3",
 		func(ctx context.Context, data interface{}) (interface{}, error) {
 			fmt.Println("3->")
-			return nil, nil
+			loggerEntry.Error("Error in Step3")
+			return nil, errors.New("Aborted")
 		},
 		func(ctx context.Context, data interface{}) (interface{}, error) {
 			fmt.Println("3<-")
@@ -54,7 +59,7 @@ func main() {
 		},
 	)
 
-	coord := saga.GetCoordinatorInstance()
+	coord := saga.GetCoordinatorInstance(loggerEntry)
 	coord.SetupCarriers(
 		&saga.InMemoryCarrierConfig{},
 	)
@@ -62,7 +67,7 @@ func main() {
 
 	data := struct{}{}
 	start := time.Now()
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1; i++ {
 		coord.Start("SampleSaga", data)
 	}
 

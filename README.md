@@ -30,16 +30,8 @@ A framework to implement Choreography based SAGA pattern in Golang. You can use 
 	-> Load
 	-> Abort
 
-
-Actions
-> Start a SAGA transaction
-	- Provide saga id, context and data
-	- Trigger an event `OrderCreated::start`
-	- this should trigger 
-
-
-Tasks
-- Make SAGA execution asynchronous
+## Tasks
+- `DONE` Make SAGA execution asynchronous
 - Add support for logger
 	- Add support for logger agents and/or centralized logging
 - 

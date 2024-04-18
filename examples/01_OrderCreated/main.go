@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	saga "github.com/vinay03/saga-go"
 )
@@ -66,8 +67,10 @@ func main() {
 			return data, nil
 		},
 	)
-
-	coord := saga.GetCoordinatorInstance()
+	loggerEntry := log.WithFields(log.Fields{
+		"service": "OrderService",
+	})
+	coord := saga.GetCoordinatorInstance(loggerEntry)
 	coord.SetupCarriers(
 		&saga.InMemoryCarrierConfig{},
 	)

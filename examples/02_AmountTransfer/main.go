@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	saga "github.com/vinay03/saga-go"
 )
@@ -118,7 +119,10 @@ func main() {
 		notificationServ.CompensateNotifyReceiverWithUpdatedBalance,
 	)
 
-	coord := saga.GetCoordinatorInstance()
+	loggerEntry := log.WithFields(log.Fields{
+		"service": "TransferService",
+	})
+	coord := saga.GetCoordinatorInstance(loggerEntry)
 	coord.SetupCarriers(
 		&saga.InMemoryCarrierConfig{},
 	)

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"sync"
 )
@@ -15,11 +14,12 @@ var CoordLock sync.Mutex
 const (
 	EventKeyFormat = "%s|%s|%s"
 
-	ErrSagaNotFound  = "[%s] Saga Id not found"
-	ErrStageNotFound = "[%s] Stage Id '%s' not found"
+	ErrSagaNotFound     = "[%s] Saga Id not found"
+	ErrStagesNotDefined = "[%s] Stages not defined"
+	ErrStageNotFound    = "[%s] Stage Id '%s' not found"
 )
 
-func GetCoordinatorInstance() *Coordinator {
+func GetCoordinatorInstance(logger Logger) *Coordinator {
 	if Coord != nil {
 		return Coord
 	}
@@ -30,7 +30,8 @@ func GetCoordinatorInstance() *Coordinator {
 		return Coord
 	}
 	Coord = &Coordinator{
-		Sagas: make(map[string]CoordinatorSaga),
+		Sagas:  make(map[string]CoordinatorSaga),
+		Logger: logger,
 	}
 	Coord.Carrier = &CarrierLineup{
 		InMem: getInMemoryCarrierInstance(),
@@ -48,6 +49,7 @@ type Coordinator struct {
 	Template  *Saga
 	IsAborted bool
 	Carrier   *CarrierLineup
+	Logger    Logger
 
 	Sagas map[string]CoordinatorSaga
 }
@@ -67,13 +69,15 @@ func (coord *Coordinator) SetupCarriers(options ...CarrierConfig) error {
 			if err != nil {
 				return err
 			}
-			coord.Carrier.InMem.AddListener(coord.EventHandler)
+			coord.Carrier.InMem.AddEventsListener(coord.EventHandler)
+			coord.Logger.Info("InMemory Carrier is active")
 		case *RedisCarrierOption:
 			err := coord.Carrier.Redis.SetOptions(v)
 			if err != nil {
 				return err
 			}
-			coord.Carrier.InMem.AddListener(coord.EventHandler)
+			coord.Carrier.InMem.AddEventsListener(coord.EventHandler)
+			coord.Logger.Info("Redis Carrier is active")
 		default:
 			return errors.New("invalid carrier option")
 		}
@@ -113,10 +117,10 @@ func (coord *Coordinator) DecodeEventKey(eventkey string) (sagaRecord *Coordinat
 //
 // Returns: None
 func (coord *Coordinator) EventHandler(eventkey string, data interface{}) {
-
+	coord.Logger.Info(fmt.Sprintf("[%s] Event received", eventkey))
 	sagaRecord, stage, eventAction, err := coord.DecodeEventKey(eventkey)
 	if err != nil {
-		log.Fatal(err)
+		coord.Logger.Error(err)
 	}
 
 	sagaId := sagaRecord.Saga.ID
@@ -127,13 +131,13 @@ func (coord *Coordinator) EventHandler(eventkey string, data interface{}) {
 		data, err := stage.Action(context.Background(), data)
 		if err != nil {
 			eventKey := generateEventKey(sagaId, stageId, "abort")
-			sagaRecord.Carrier.Push(eventKey, data)
+			coord.PushEvent(sagaRecord.Carrier, eventKey, data)
 		}
 		// Call start action of the next stage or complete the SAGA.
 		nextStage := sagaRecord.Saga.GetNextStage(stage)
 		if nextStage != nil {
 			eventKey := generateEventKey(sagaId, nextStage.ID, "start")
-			sagaRecord.Carrier.Push(eventKey, data)
+			coord.PushEvent(sagaRecord.Carrier, eventKey, data)
 		} else {
 			// End of SAGA
 		}
@@ -141,22 +145,28 @@ func (coord *Coordinator) EventHandler(eventkey string, data interface{}) {
 		data, err := stage.CompensateAction(context.Background(), data)
 		if err != nil {
 			eventKey := generateEventKey(sagaId, stageId, "abort")
-			sagaRecord.Carrier.Push(eventKey, data)
+			coord.PushEvent(sagaRecord.Carrier, eventKey, data)
 		}
 		// call abort action of previous stage or abort the SAGA completely
 		prevStage := sagaRecord.Saga.GetPrevStage(stage)
 		if prevStage != nil {
 			eventKey := generateEventKey(sagaId, prevStage.ID, "abort")
-			sagaRecord.Carrier.Push(eventKey, data)
+			coord.PushEvent(sagaRecord.Carrier, eventKey, data)
 		} else {
 			// End of SAGA Abortion sequence
 		}
 	default:
-		log.Fatalf("[%s] Invalid event action: %s", eventkey, eventAction)
+		coord.Logger.Error(fmt.Sprintf("[%s] Invalid event action: %s", eventkey, eventAction))
 	}
-
 }
 
+func (coord *Coordinator) PushEvent(carrier Carrier, eventKey string, data interface{}) {
+	coord.Logger.Info(fmt.Sprintf("[%s] Pushing event", eventKey))
+	carrier.Push(eventKey, data)
+}
+
+// RegisterSaga registers a new saga with the coordinator.
+// It associates the given saga and carrier with the saga ID in the coordinator's Sagas map.
 func (coord *Coordinator) RegisterSaga(saga *Saga, carr Carrier) {
 	coord.Sagas[saga.ID] = CoordinatorSaga{
 		Saga:    saga,
@@ -164,26 +174,55 @@ func (coord *Coordinator) RegisterSaga(saga *Saga, carr Carrier) {
 	}
 }
 
+// generateEventKey generates a unique key for an event based on the given saga ID, stage ID, and event action.
 func generateEventKey(sagaId, stageId, eventAction string) string {
 	return fmt.Sprintf(EventKeyFormat, sagaId, stageId, eventAction)
 }
 
+// splitEventKey splits the given eventKey into three parts.
+// It expects the eventKey to be in the format "part1|part2|part3".
+// It returns three strings representing the three parts of the eventKey.
+//
+// Parameters:
+// - eventKey: The eventKey to be split into three parts.
+//
+// Returns:
+// - string: Saga Id.
+// - string: Stage Id.
+// - string: Event Action.
 func splitEventKey(eventKey string) (string, string, string) {
 	parts := strings.Split(eventKey, "|")
 	return parts[0], parts[1], parts[2]
 }
 
-func (coord *Coordinator) Start(sagaId string, data interface{}) (interface{}, error) {
+// Start initiates the execution of a saga with the given sagaId and data.
+// The sagaId is a unique identifier for the saga, and data is the input data
+// required for the saga execution.
+//
+// Parameters:
+// - sagaId: The unique identifier for the saga.
+// - data: The input data required for the saga execution.
+//
+// Returns:
+// - interface{}: The result of the saga execution.
+// - error: An error, if any, occurred during the saga execution.
+func (coord *Coordinator) Start(sagaId string, data interface{}) error {
 
 	val, ok := coord.Sagas[sagaId]
 	if !ok {
-		return data, fmt.Errorf(ErrSagaNotFound, sagaId)
+		return fmt.Errorf(ErrSagaNotFound, sagaId)
 	}
 
-	eventKey := generateEventKey(sagaId, "", "start")
-	val.Carrier.Push(eventKey, data)
+	if val.Saga.StagesCount == 0 {
+		return fmt.Errorf(ErrStagesNotDefined, sagaId)
+	}
 
-	return data, nil
+	stage := val.Saga.GetFirstStage()
+
+	eventKey := generateEventKey(sagaId, stage.ID, "start")
+	coord.PushEvent(val.Carrier, eventKey, data)
+
+	return nil
 }
 
 // func (tr *Coordinator) Abort(data interface{}) interface{} {

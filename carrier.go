@@ -4,7 +4,7 @@ type Carrier interface {
 	IsActive() bool
 	SetOptions(CarrierConfig) error
 	Push(Message string, Data interface{}) error
-	AddListener(func(Message string, Data interface{})) error
+	AddEventsListener(func(Message string, Data interface{})) error
 }
 
 type CarrierConfig interface {
