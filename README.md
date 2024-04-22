@@ -35,3 +35,9 @@ A framework to implement Choreography based SAGA pattern in Golang. You can use 
 - Add support for logger
 	- Add support for logger agents and/or centralized logging
 - 
+<!-- 
+Inspiration
+EchoVault:
+- [LinkedIn Post](https://www.linkedin.com/feed/update/urn:li:activity:7186276898723799040?utm_source=share&utm_medium=member_desktop)
+- https://github.com/EchoVault/EchoVault
+ -->

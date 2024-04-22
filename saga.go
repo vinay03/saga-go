@@ -92,7 +92,7 @@ func (sg *Saga) AddStage(st *Stage) error {
 	return nil
 }
 
-func (sg *Saga) DefineActions(stageId string, action ActionFunction, compensateAction ActionFunction) error {
+func (sg *Saga) DefineSubTransactions(stageId string, action ActionFunction, compensateAction ActionFunction) error {
 	stage, found := sg.StagesNameRef[stageId]
 	if !found {
 		return fmt.Errorf(ErrStageNotFound, sg.ID, stageId)

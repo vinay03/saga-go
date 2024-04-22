@@ -95,25 +95,25 @@ func main() {
 		log.Fatal(err)
 	}
 
-	TransferSaga.DefineActions(
+	TransferSaga.DefineSubTransactions(
 		"DeduceSenderBalancer",
 		accountServ.DeduceBalance,
 		accountServ.CompensateDeduceBalance,
 	)
 
-	TransferSaga.DefineActions(
+	TransferSaga.DefineSubTransactions(
 		"IncreaseReceiverBalance",
 		accountServ.IncreaseBalance,
 		accountServ.CompensateIncreaseBalance,
 	)
 
-	TransferSaga.DefineActions(
+	TransferSaga.DefineSubTransactions(
 		"NotifySenderWithUpdatedBalance",
 		notificationServ.NotifySenderWithUpdatedBalance,
 		notificationServ.CompensateNotifySenderWithUpdatedBalance,
 	)
 
-	TransferSaga.DefineActions(
+	TransferSaga.DefineSubTransactions(
 		"NotifyReceiverWithUpdatedBalance",
 		notificationServ.NotifyReceiverWithUpdatedBalance,
 		notificationServ.CompensateNotifyReceiverWithUpdatedBalance,

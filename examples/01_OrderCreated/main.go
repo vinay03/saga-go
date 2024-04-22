@@ -22,7 +22,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	OrderCreatedSaga.DefineActions(
+	OrderCreatedSaga.DefineSubTransactions(
 		"CheckProducts",
 		func(ctx context.Context, data interface{}) (interface{}, error) {
 			fmt.Println("Entered `CheckProducts` phase")
@@ -34,7 +34,7 @@ func main() {
 		},
 	)
 
-	OrderCreatedSaga.DefineActions(
+	OrderCreatedSaga.DefineSubTransactions(
 		"CheckDiscounts",
 		func(ctx context.Context, data interface{}) (interface{}, error) {
 			fmt.Println("Entered `CheckDiscounts` phase")
@@ -45,7 +45,7 @@ func main() {
 			return data, nil
 		},
 	)
-	OrderCreatedSaga.DefineActions(
+	OrderCreatedSaga.DefineSubTransactions(
 		"NotifyNewOrderToSeller",
 		func(ctx context.Context, data interface{}) (interface{}, error) {
 			fmt.Println("Entered `NotifyNewOrderToSeller` phase")
@@ -56,7 +56,7 @@ func main() {
 			return data, nil
 		},
 	)
-	OrderCreatedSaga.DefineActions(
+	OrderCreatedSaga.DefineSubTransactions(
 		"NotifyOrderUpdateToBuyer",
 		func(ctx context.Context, data interface{}) (interface{}, error) {
 			fmt.Println("Entered `NotifyOrderUpdateToBuyer` phase")

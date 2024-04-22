@@ -24,7 +24,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	sampleSaga.DefineActions(
+	sampleSaga.DefineSubTransactions(
 		"Step1",
 		func(ctx context.Context, data interface{}) (interface{}, error) {
 			fmt.Println("1->")
@@ -35,7 +35,7 @@ func main() {
 			return nil, nil
 		},
 	)
-	sampleSaga.DefineActions(
+	sampleSaga.DefineSubTransactions(
 		"Step2",
 		func(ctx context.Context, data interface{}) (interface{}, error) {
 			fmt.Println("2->")
@@ -46,7 +46,7 @@ func main() {
 			return nil, nil
 		},
 	)
-	sampleSaga.DefineActions(
+	sampleSaga.DefineSubTransactions(
 		"Step3",
 		func(ctx context.Context, data interface{}) (interface{}, error) {
 			fmt.Println("3->")
