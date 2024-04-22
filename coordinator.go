@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var Coord *Coordinator
@@ -19,7 +21,7 @@ const (
 	ErrStageNotFound    = "[%s] Stage Id '%s' not found"
 )
 
-func GetCoordinatorInstance(logger Logger) *Coordinator {
+func GetCoordinatorInstance() *Coordinator {
 	if Coord != nil {
 		return Coord
 	}
@@ -29,6 +31,9 @@ func GetCoordinatorInstance(logger Logger) *Coordinator {
 	if Coord != nil {
 		return Coord
 	}
+	logger := log.WithFields(log.Fields{
+		"gen": "saga-go",
+	})
 	Coord = &Coordinator{
 		Sagas:  make(map[string]CoordinatorSaga),
 		Logger: logger,
@@ -71,7 +76,7 @@ func (coord *Coordinator) SetupCarriers(options ...CarrierConfig) error {
 			}
 			coord.Carrier.InMem.AddEventsListener(coord.EventHandler)
 			coord.Logger.Info("InMemory Carrier is active")
-		case *RedisCarrierOption:
+		case *RedisCarrierConfig:
 			err := coord.Carrier.Redis.SetOptions(v)
 			if err != nil {
 				return err
