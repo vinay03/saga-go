@@ -119,10 +119,7 @@ func main() {
 		notificationServ.CompensateNotifyReceiverWithUpdatedBalance,
 	)
 
-	loggerEntry := log.WithFields(log.Fields{
-		"service": "TransferService",
-	})
-	coord := saga.GetCoordinatorInstance(loggerEntry)
+	coord := saga.GetCoordinatorInstance()
 	coord.SetupCarriers(
 		&saga.InMemoryCarrierConfig{},
 	)

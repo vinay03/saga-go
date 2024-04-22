@@ -59,7 +59,7 @@ func main() {
 		},
 	)
 
-	coord := saga.GetCoordinatorInstance(loggerEntry)
+	coord := saga.GetCoordinatorInstance()
 	coord.SetupCarriers(
 		&saga.InMemoryCarrierConfig{},
 	)

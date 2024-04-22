@@ -67,10 +67,7 @@ func main() {
 			return data, nil
 		},
 	)
-	loggerEntry := log.WithFields(log.Fields{
-		"service": "OrderService",
-	})
-	coord := saga.GetCoordinatorInstance(loggerEntry)
+	coord := saga.GetCoordinatorInstance()
 	coord.SetupCarriers(
 		&saga.InMemoryCarrierConfig{},
 	)
