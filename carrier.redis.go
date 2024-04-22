@@ -8,7 +8,7 @@ type RedisCarrier struct {
 func getRedisCarrierInstance() *RedisCarrier {
 	return &RedisCarrier{
 		Active:  false,
-		Options: &RedisCarrierOption{},
+		Options: &RedisCarrierConfig{},
 	}
 }
 
@@ -16,7 +16,7 @@ func (rc *RedisCarrier) IsActive() bool {
 	return rc.Active
 }
 func (rc *RedisCarrier) SetOptions(opts CarrierConfig) error {
-	val, _ := opts.(*InMemoryCarrierConfig)
+	val, _ := opts.(*RedisCarrierConfig)
 	err := val.Verify()
 	if err != nil {
 		return err
@@ -34,9 +34,11 @@ func (mem *RedisCarrier) AddEventsListener(func(Message string, Data interface{}
 
 // ************************************************************
 /* Redis Carrier Configuration */
-type RedisCarrierOption struct {
+type RedisCarrierConfig struct {
+	Host     string
+	Password string
 }
 
-func (redisOpt *RedisCarrierOption) Verify() error {
+func (redisCfg *RedisCarrierConfig) Verify() error {
 	return nil
 }

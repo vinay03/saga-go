@@ -30,15 +30,17 @@ func (mem *InMemoryCarrier) Push(Message string, Data interface{}) error {
 	go mem.EventListener(Message, Data)
 	return nil
 }
+
 func (mem *InMemoryCarrier) AddEventsListener(handlerFunc func(Message string, Data interface{})) error {
 	mem.EventListener = handlerFunc
 	return nil
 }
 
+// ************************************************************
 /* In-Memory Carrier Configuration */
 type InMemoryCarrierConfig struct {
 }
 
-func (memOpt *InMemoryCarrierConfig) Verify() error {
+func (memCfg *InMemoryCarrierConfig) Verify() error {
 	return nil
 }
