@@ -11,9 +11,6 @@ import (
 )
 
 func main() {
-	loggerEntry := log.WithFields(log.Fields{
-		"service": "BasicService",
-	})
 
 	sampleSaga, err := saga.NewSaga("SampleSaga").Transactions(
 		"Step1",
@@ -50,7 +47,9 @@ func main() {
 		"Step3",
 		func(ctx context.Context, data interface{}) (interface{}, error) {
 			fmt.Println("3->")
-			// loggerEntry.Error("Error in Step3")
+			// log.WithFields(log.Fields{
+			// 	"service": "BasicService",
+			// }).Error("Error in Step3")
 			return nil, nil
 			// return nil, errors.New("Aborted")
 		},
