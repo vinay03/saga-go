@@ -50,8 +50,9 @@ func main() {
 		"Step3",
 		func(ctx context.Context, data interface{}) (interface{}, error) {
 			fmt.Println("3->")
-			loggerEntry.Error("Error in Step3")
-			return nil, errors.New("Aborted")
+			// loggerEntry.Error("Error in Step3")
+			return nil, nil
+			// return nil, errors.New("Aborted")
 		},
 		func(ctx context.Context, data interface{}) (interface{}, error) {
 			fmt.Println("3<-")
