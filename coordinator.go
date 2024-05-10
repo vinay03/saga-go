@@ -75,13 +75,15 @@ func (coord *Coordinator) SetupCarriers(options ...CarrierConfig) error {
 				return err
 			}
 			coord.Carrier.InMem.AddEventsListener(coord.EventHandler)
+			coord.Carrier.InMem.Activate()
 			coord.Logger.Info("InMemory Carrier is active")
 		case *RedisCarrierConfig:
 			err := coord.Carrier.Redis.SetOptions(v)
 			if err != nil {
 				return err
 			}
-			coord.Carrier.InMem.AddEventsListener(coord.EventHandler)
+			coord.Carrier.Redis.AddEventsListener(coord.EventHandler)
+			coord.Carrier.Redis.Activate()
 			coord.Logger.Info("Redis Carrier is active")
 		default:
 			return errors.New("invalid carrier option")
@@ -173,6 +175,10 @@ func (coord *Coordinator) PushEvent(carrier Carrier, eventKey string, data inter
 // RegisterSaga registers a new saga with the coordinator.
 // It associates the given saga and carrier with the saga ID in the coordinator's Sagas map.
 func (coord *Coordinator) RegisterSaga(saga *Saga, carr Carrier) {
+	if !carr.IsActive() {
+		log.Error("Message carrier is not active.")
+		return
+	}
 	coord.Sagas[saga.ID] = CoordinatorSaga{
 		Saga:    saga,
 		Carrier: carr,
