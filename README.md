@@ -1,6 +1,7 @@
 ## Saga
 A framework to implement Choreography based SAGA pattern in Golang. You can use this framework to implement SAGA pattern in local as well as distributed systems.
 
+Planning Document: https://docs.google.com/spreadsheets/d/1s58lIXTGunvj4AzstEPtfdQZGGuCTdmA1rrYbhicQes/edit#gid=0
 
 ## Structure
 - Entities

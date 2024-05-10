@@ -3,6 +3,7 @@ package saga
 import (
 	"context"
 	"encoding/json"
+	"errors"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -23,6 +24,15 @@ func getRedisCarrierInstance() *RedisCarrier {
 func (rc *RedisCarrier) IsActive() bool {
 	return rc.Active
 }
+
+func (rc *RedisCarrier) Activate() error {
+	if rc.Client == nil {
+		return errors.New("Client not set")
+	}
+	rc.Active = true
+	return nil
+}
+
 func (rc *RedisCarrier) SetOptions(opts CarrierConfig) error {
 	cfg, _ := opts.(*RedisCarrierConfig)
 	err := cfg.Verify()

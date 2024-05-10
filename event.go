@@ -22,6 +22,7 @@ func (ed *EventData) GetKey() string {
 func GetEventData(eventKey string, data interface{}) *EventData {
 	ed := EventData{}
 	ed.Set(eventKey, data)
+	return &ed
 }
 
 func (ed *EventData) Set(eventKey string, data interface{}) {

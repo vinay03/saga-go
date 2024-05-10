@@ -69,6 +69,8 @@ type Coordinator struct {
 func (coord *Coordinator) SetupCarriers(options ...CarrierConfig) error {
 	for _, opts := range options {
 		switch v := opts.(type) {
+
+		// Setup In-Memory Message Carrier
 		case *InMemoryCarrierConfig:
 			err := coord.Carrier.InMem.SetOptions(v)
 			if err != nil {
@@ -77,6 +79,8 @@ func (coord *Coordinator) SetupCarriers(options ...CarrierConfig) error {
 			coord.Carrier.InMem.AddEventsListener(coord.EventHandler)
 			coord.Carrier.InMem.Activate()
 			coord.Logger.Info("InMemory Carrier is active")
+
+			// Setup Redis Message Carrier
 		case *RedisCarrierConfig:
 			err := coord.Carrier.Redis.SetOptions(v)
 			if err != nil {
