@@ -12,7 +12,7 @@ import (
 
 func main() {
 
-	sampleSaga, err := saga.NewSaga("SampleSaga").Transactions(
+	sampleSaga, err := saga.New("SampleSaga").Transactions(
 		"Step1",
 		"Step2",
 		"Step3",

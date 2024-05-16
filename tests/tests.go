@@ -18,7 +18,7 @@ func TestSagaGo(t *testing.T) {
 }
 
 func InitInMemSaga() {
-	sampleSaga, err := saga.NewSaga("SampleSaga").Transactions(
+	sampleSaga, err := saga.New("SampleSaga").Transactions(
 		"Step1",
 		"Step2",
 		"Step3",

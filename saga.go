@@ -7,30 +7,25 @@ import (
 )
 
 var (
-	ErrEmptySagaID = errors.New("empty stage identifier")
+	errEmptySagaID = errors.New("empty stage identifier")
 )
 
-// NewSaga initializes a new Saga with the given identifier.
+// New initializes a new Saga with the given identifier.
 //
 // @Param id the identifier of the Saga (string). Same will be put in event key to identify the Saga. Alphabets and numbers are allowed only.
 //
 // Returns:
 // - a pointer to the newly created Saga.
-func NewSaga(id string) *Saga {
-	saga := _NewSaga()
+func New(id string) *Saga {
+	saga := &Saga{
+		StagesNameRef: make(map[string]*Stage),
+	}
 	err := VerifySagaId(id)
 	if err != nil {
 		log.Fatal("Invalid Saga ID: ", id)
 	}
 	saga.ID = id
 	return saga
-}
-
-// Initializes the default state of any SAGA
-func _NewSaga() *Saga {
-	return &Saga{
-		StagesNameRef: make(map[string]*Stage),
-	}
 }
 
 type StageList []*Stage
@@ -65,7 +60,7 @@ func VerifySagaId(id string) error {
 	// 	2. Only Alphabets and Numbers are allowed
 	// 	3. Should not already exist under same SAGA.
 	if id == "" {
-		return ErrEmptySagaID
+		return errEmptySagaID
 	}
 	return nil
 }
@@ -95,7 +90,7 @@ func (sg *Saga) AddStage(st *Stage) error {
 func (sg *Saga) DefineSubTransactions(stageId string, action ActionFunction, compensateAction ActionFunction) error {
 	stage, found := sg.StagesNameRef[stageId]
 	if !found {
-		return fmt.Errorf(ErrStageNotFound, sg.ID, stageId)
+		return fmt.Errorf(errTemplateStageNotFound, sg.ID, stageId)
 	}
 	stage.Action = action
 	stage.CompensateAction = compensateAction

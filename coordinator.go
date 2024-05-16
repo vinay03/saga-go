@@ -10,39 +10,39 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var Coord *Coordinator
-var CoordLock sync.Mutex
+var coord *Coordinator
+var coordLock sync.Mutex
 
 const (
-	EventKeyFormat = "%s|%s|%s"
+	eventKeyFormat = "%s|%s|%s"
 
-	ErrSagaNotFound     = "[%s] Saga Id not found"
-	ErrStagesNotDefined = "[%s] Stages not defined"
-	ErrStageNotFound    = "[%s] Stage Id '%s' not found"
+	errTemplateSagaNotFound     = "[%s] Saga Id not found"
+	errTemplateStagesNotDefined = "[%s] Stages not defined"
+	errTemplateStageNotFound    = "[%s] Stage Id '%s' not found"
 )
 
 func GetCoordinatorInstance() *Coordinator {
-	if Coord != nil {
-		return Coord
+	if coord != nil {
+		return coord
 	}
-	CoordLock.Lock()
-	defer CoordLock.Unlock()
+	coordLock.Lock()
+	defer coordLock.Unlock()
 	// Just in case if instance is created within the Mutex locking operation.
-	if Coord != nil {
-		return Coord
+	if coord != nil {
+		return coord
 	}
 	logger := log.WithFields(log.Fields{
 		"gen": "saga-go",
 	})
-	Coord = &Coordinator{
+	coord = &Coordinator{
 		Sagas:  make(map[string]CoordinatorSaga),
 		Logger: logger,
 	}
-	Coord.Carrier = &CarrierLineup{
+	coord.Carrier = &CarrierLineup{
 		InMem: getInMemoryCarrierInstance(),
 		Redis: getRedisCarrierInstance(),
 	}
-	return Coord
+	return coord
 }
 
 type CoordinatorSaga struct {
@@ -102,7 +102,7 @@ func (coord *Coordinator) DecodeEventKey(eventkey string) (sagaRecord *Coordinat
 
 	value, ok := coord.Sagas[sagaId]
 	if !ok {
-		err = fmt.Errorf(ErrSagaNotFound, sagaId)
+		err = fmt.Errorf(errTemplateSagaNotFound, sagaId)
 		return
 	}
 	sagaRecord = &value
@@ -114,7 +114,7 @@ func (coord *Coordinator) DecodeEventKey(eventkey string) (sagaRecord *Coordinat
 
 	stage, found := sagaRecord.Saga.StagesNameRef[stageId]
 	if !found {
-		err = fmt.Errorf(ErrStageNotFound, sagaId, stageId)
+		err = fmt.Errorf(errTemplateStageNotFound, sagaId, stageId)
 		return
 	}
 	return sagaRecord, stage, eventAction, err
@@ -191,7 +191,7 @@ func (coord *Coordinator) RegisterSaga(saga *Saga, carr Carrier) {
 
 // generateEventKey generates a unique key for an event based on the given saga ID, stage ID, and event action.
 func generateEventKey(sagaId, stageId, eventAction string) string {
-	return fmt.Sprintf(EventKeyFormat, sagaId, stageId, eventAction)
+	return fmt.Sprintf(eventKeyFormat, sagaId, stageId, eventAction)
 }
 
 // splitEventKey splits the given eventKey into three parts.
@@ -225,11 +225,11 @@ func (coord *Coordinator) Start(sagaId string, data interface{}) error {
 
 	val, ok := coord.Sagas[sagaId]
 	if !ok {
-		return fmt.Errorf(ErrSagaNotFound, sagaId)
+		return fmt.Errorf(errTemplateSagaNotFound, sagaId)
 	}
 
 	if val.Saga.StagesCount == 0 {
-		return fmt.Errorf(ErrStagesNotDefined, sagaId)
+		return fmt.Errorf(errTemplateStagesNotDefined, sagaId)
 	}
 
 	stage := val.Saga.GetFirstStage()

@@ -85,7 +85,7 @@ func main() {
 	notificationServ := NotificationService{}
 
 	var err error
-	TransferSaga, err = saga.NewSaga("Transfer").Transactions(
+	TransferSaga, err = saga.New("Transfer").Transactions(
 		"DeduceSenderBalancer",
 		"IncreaseReceiverBalance",
 		"NotifySenderWithUpdatedBalance",

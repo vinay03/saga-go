@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	OrderCreatedSaga, err := saga.NewSaga("OrderCreated").Transactions(
+	OrderCreatedSaga, err := saga.New("OrderCreated").Transactions(
 		"CheckProducts",
 		"CheckDiscounts",
 		"NotifyNewOrderToSeller",
